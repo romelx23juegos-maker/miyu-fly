@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>空の旅 – Miyu</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<style>
+:root{--panel:#3a4a7acc;--card:#f6f1e4f0;--ink:#2f3a66;--gold:#ffd24a;--pink:#ff8fb1}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#cfe8f3;color:#fff;
+ font-family:'Zen Maru Gothic','Hiragino Maru Gothic ProN','Yu Gothic','Meiryo',system-ui,sans-serif}
+canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none}
+#hud>*{position:absolute}
+.pill{background:var(--panel);border:2px solid #ffffff55;border-radius:999px;padding:6px 18px;box-shadow:0 4px 14px #1b2a5a44;font-weight:800;display:flex;align-items:center;gap:10px}
+#avatar{top:14px;left:16px;width:84px;height:84px;border-radius:50%;border:4px solid #fff;overflow:hidden;background:#cfe9f7;box-shadow:0 4px 14px #1b2a5a55}
+#avatar svg,.sayav svg{width:100%;height:100%;display:block}
+#lvl{top:20px;left:112px;font-weight:800;font-size:20px;text-shadow:0 2px 4px #1b2a5a88}
+#xp{top:52px;left:112px;width:190px;height:16px;border-radius:9px;background:#3a4a7a99;border:2px solid #fff8;overflow:hidden}
+#xp i{display:block;height:100%;width:30%;background:linear-gradient(90deg,#ff7fa3,#ffb3c8);transition:width .5s}
+#say{top:112px;left:16px;width:min(360px,62vw);display:flex;gap:10px;align-items:center;padding:10px 14px;background:var(--card);color:var(--ink);
+ border-radius:20px;border:2px solid #fff;box-shadow:0 6px 18px #1b2a5a44;opacity:0;transform:translateY(-8px);transition:.35s}
+#say.show{opacity:1;transform:none}
+.sayav{flex:0 0 52px;height:52px;border-radius:50%;overflow:hidden;background:#cfe9f7;border:2px solid #fff}
+#say b{display:block;font-size:17px}#say span{font-size:15px;font-weight:600;line-height:1.25}
+#timer{top:16px;left:50%;transform:translateX(-50%);font-size:30px;padding:6px 24px}
+#timer svg{width:30px;height:30px}
+#stars{top:20px;right:84px;font-size:24px}
+#pause{top:16px;right:16px;width:56px;height:56px;border-radius:50%;pointer-events:auto;cursor:pointer;border:2px solid #fff8;background:var(--panel);display:grid;place-items:center}
+#pause i{display:block;width:6px;height:22px;background:#fff;border-radius:3px;box-shadow:12px 0 #fff;margin-right:12px}
+#mission{top:88px;right:16px;width:210px;border-radius:14px;overflow:hidden;background:var(--card);color:var(--ink);box-shadow:0 6px 18px #1b2a5a44;border:2px solid #fff}
+#mission h4{margin:0;padding:6px 12px;background:#3a4a7a;color:#fff;font-size:17px}
+#mission p{margin:0;padding:8px 12px;font-size:14px;font-weight:700;line-height:1.3}
+#alt{right:16px;top:50%;transform:translateY(-35%);width:78px;padding:10px 6px 12px;border-radius:26px;background:var(--panel);border:2px solid #fff6;text-align:center}
+#alt small{display:block;font-weight:800;font-size:15px}#alt strong{display:block;font-size:20px;margin:2px 0 8px}
+#altbar{margin:0 auto;width:24px;height:130px;border-radius:12px;background:#ffffff33;position:relative;overflow:hidden}
+#altbar i{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(0deg,#6bd35a,#f2d04a 60%,#f2a24a);transition:height .15s}
+#stick{left:26px;bottom:26px;width:130px;height:130px;border-radius:50%;background:#ffffff33;border:3px solid #ffffff88;pointer-events:auto;touch-action:none;backdrop-filter:blur(3px)}
+#knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px;border-radius:50%;background:#fffc;box-shadow:0 3px 10px #1b2a5a66}
+#boost{right:26px;bottom:26px;width:104px;height:104px;border-radius:50%;pointer-events:auto;touch-action:none;cursor:pointer;display:grid;place-items:center;--e:100;
+ background:conic-gradient(var(--pink) calc(var(--e)*1%),#ffffff33 0);padding:6px}
+#boost div{width:100%;height:100%;border-radius:50%;background:#5b4a9acc;display:grid;place-items:center;text-align:center;font-weight:800;font-size:15px;line-height:1.1;border:2px solid #fff8}
+#boost div span{font-size:34px;display:block}
+#boost.on div{background:#8a5cf0}
+#hint{bottom:10px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:700;opacity:.9;text-shadow:0 1px 3px #1b2a5a;white-space:nowrap}
+#marker{left:0;top:0;display:none;transform:translate(-50%,-50%);text-align:center;font-weight:800;text-shadow:0 2px 4px #1b2a5a}
+#marker svg{width:34px;height:34px;display:block;margin:0 auto;filter:drop-shadow(0 2px 3px #1b2a5a88)}
+#flash{inset:0;background:#fff;opacity:0;transition:opacity .5s}
+.screen{position:fixed;inset:0;display:none;place-items:center;background:radial-gradient(#1b2a5a55,#1b2a5aaa);z-index:5;text-align:center}
+.screen.show{display:grid}
+.card{background:var(--card);color:var(--ink);padding:26px 40px;border-radius:26px;border:3px solid #fff;box-shadow:0 12px 40px #1b2a5a77;max-width:min(520px,90vw)}
+.card{max-height:94vh;overflow-y:auto;overflow-x:hidden}
+#petals{top:72px;left:108px;padding:2px 12px;font-size:15px;gap:4px}
+.sp{margin:0 0 4px!important}.card h3{margin:14px 0 6px;font-size:18px;text-align:left}
+#outfits{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.oc{font:inherit;color:var(--ink);cursor:pointer;background:#fffdf6;border:2px solid #d8cdb4;border-radius:16px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.oc.eq{border-color:#f26f93;background:#fff3f6}.oc:disabled{opacity:.5;cursor:not-allowed}.oc:not(:disabled):hover{border-color:var(--pink)}
+.oc .sw{width:64px;height:64px;border-radius:50%;border:3px solid #fff;box-shadow:0 3px 8px #1b2a5a44}.oc .on{font-weight:800}.oc .ob{font-size:13px;font-weight:700;opacity:.8}
+.ur{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #e3dac4;text-align:left}
+.ur b{display:block}.ur small{font-size:12px;font-weight:600;opacity:.7}
+.pips{display:flex;gap:4px}.pips i{width:12px;height:12px;border-radius:50%;background:#ddd5c0}.pips i.on{background:#f26f93}
+.ub{font:inherit;font-weight:800;font-size:14px;color:#fff;background:#5a6eb0;border:2px solid #fff;border-radius:999px;padding:6px 14px;cursor:pointer}.ub:disabled{background:#b7b2a3;cursor:not-allowed}
+#hud{transition:opacity .3s}body.vn #hud{opacity:0}
+#vn{place-items:end center;background:linear-gradient(transparent 40%,#1b2a5a99);z-index:8;cursor:pointer;padding-bottom:3vh}
+.vnbox{display:flex;gap:16px;align-items:center;width:min(760px,94vw);background:var(--card);color:var(--ink);border:3px solid #fff;border-radius:26px;padding:14px 20px 14px 14px;box-shadow:0 12px 40px #1b2a5a88;text-align:left}
+.vnav{flex:0 0 120px;height:120px;border-radius:22px;overflow:hidden;border:3px solid #fff;box-shadow:0 4px 14px #1b2a5a55;background:#cfe9f7}.vnav svg{width:100%;height:100%;display:block}
+.vnhead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.vnhead b{font-size:22px}.vnhead span{font-size:13px;font-weight:700;opacity:.7}
+#vnText{margin:6px 0 8px;font-size:18px;font-weight:700;line-height:1.4;min-height:5.6em}
+.vnhint{font-size:12px;font-weight:700;opacity:.55;text-align:right}
+.mi.lock{cursor:not-allowed;opacity:.55;background:#eee9dc}.mi.lock:hover{border-color:#d8cdb4;background:#eee9dc}.mi .mt{grid-column:1/3;font-size:13px;font-weight:700;color:#8a4a5a}
+@media (max-width:900px){.vnav{flex-basis:80px;height:80px}.vnbox{padding:10px}#vnText{font-size:15px;min-height:6em}.vnhead b{font-size:18px}}
+@media (max-width:900px){
+ #timer{font-size:20px;padding:4px 14px;top:12px}#timer svg{width:22px;height:22px}
+ #stars{font-size:18px;right:80px;top:70px}#pause{width:46px;height:46px;top:12px;right:12px}
+ #mission{width:160px;top:112px;right:12px}#mission h4{font-size:14px}#mission p{font-size:12px}
+ #petals{top:58px;left:86px;font-size:13px}
+ #avatar{width:64px;height:64px}#lvl{left:90px;top:14px;font-size:16px}#xp{left:90px;top:40px;width:130px}
+ #say{top:90px;width:min(300px,52vw)}#say span{font-size:13px}
+ #alt{width:64px;transform:translateY(-10%)}#altbar{height:90px}
+ #stick{width:110px;height:110px}#boost{width:88px;height:88px}
+}
+.card h1{margin:0;font-size:44px;letter-spacing:4px}.card h2{margin:0 0 6px;font-size:32px}
+.card p{margin:8px 0 18px;font-weight:700;line-height:1.35}
+.btn{font:inherit;font-weight:800;font-size:20px;color:#fff;background:linear-gradient(#ff8fb1,#f26f93);border:3px solid #fff;border-radius:999px;padding:10px 34px;cursor:pointer;box-shadow:0 5px 14px #f26f9366;margin:4px}
+.btn.alt{background:linear-gradient(#7a8ed0,#5a6eb0)}
+#mlist{display:flex;flex-direction:column;gap:10px;margin:12px 0 14px;min-width:min(460px,66vw)}
+.mi{font:inherit;color:var(--ink);text-align:left;cursor:pointer;background:#fffdf6;border:2px solid #d8cdb4;border-radius:16px;padding:10px 14px;display:grid;grid-template-columns:1fr auto;gap:2px 10px}
+.mi:hover{border-color:var(--pink);background:#fff3f6}.mi.cur{border-color:#f26f93}
+.mi .mn{font-weight:800;font-size:18px}.mi .md{grid-column:1;font-size:13px;font-weight:600;opacity:.8}
+.mi .ms{grid-column:2;grid-row:1/3;align-self:center;font-size:24px;color:var(--gold);text-shadow:0 2px 0 #c9971f}.mi .ms i{font-style:normal}.mi .ms i.off{color:#d9d2c0;text-shadow:none}
+.big i{font-style:normal}
+.big{font-size:54px;color:var(--gold);text-shadow:0 3px 0 #c9971f;letter-spacing:6px}.big .off{color:#c9c2b0;text-shadow:none}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="miyu" viewBox="0 0 100 100"><rect width="100" height="100" fill="#cfe9f7"/>
+<ellipse cx="50" cy="52" rx="36" ry="40" fill="#7a4630"/><ellipse cx="50" cy="58" rx="26" ry="28" fill="#ffe3d0"/>
+<path d="M22 50 Q30 24 50 24 Q72 24 78 50 Q64 36 50 40 Q36 36 22 50Z" fill="#8a5238"/>
+<path d="M24 38 Q50 6 76 38 Q50 28 24 38Z" fill="#2a3a74"/><circle cx="50" cy="28" r="4" fill="#f5c542"/>
+<ellipse cx="40" cy="60" rx="4.5" ry="6" fill="#4a2a1e"/><ellipse cx="60" cy="60" rx="4.5" ry="6" fill="#4a2a1e"/>
+<circle cx="41.5" cy="58" r="1.8" fill="#fff"/><circle cx="61.5" cy="58" r="1.8" fill="#fff"/>
+<ellipse cx="34" cy="69" rx="5" ry="3" fill="#ffb3b3" opacity=".7"/><ellipse cx="66" cy="69" rx="5" ry="3" fill="#ffb3b3" opacity=".7"/>
+<path d="M44 73 Q50 78 56 73" stroke="#c0555a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<circle cx="76" cy="36" r="6" fill="#ff8fb1"/><circle cx="76" cy="36" r="2" fill="#ffe9a0"/>
+<path d="M18 100 Q50 78 82 100Z" fill="#f2f5fb"/></symbol></defs></svg>
+
+<div id="hud">
+ <div id="avatar"><svg><use href="#miyu"/></svg></div>
+ <div id="lvl">Nv. 5</div><div id="xp"><i></i></div>
+ <div id="petals" class="pill">🌸 <span id="petalTxt">0</span></div>
+ <div id="say"><div class="sayav"><svg><use id="sayUse" href="#miyu"/></svg></div><div><b id="sayName">Miyu</b><span id="saytxt"></span></div></div>
+ <div id="timer" class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="14" r="8"/><path d="M12 14V9M9 2h6M19 5l1.5 1.5"/></svg><span id="time">00:00.0</span></div>
+ <div id="stars" class="pill"><span style="color:#ffd24a">★</span><span id="starTxt">0 / 6</span></div>
+ <div id="pause"><i></i></div>
+ <div id="mission"><h4 id="missionName">★ Misión</h4><p id="missionTxt">Cruza los 6 aros y llega al templo en menos de 60 s</p></div>
+ <div id="alt"><small>Altura</small><strong id="altTxt">0 m</strong><div id="altbar"><i></i></div></div>
+ <div id="stick"><div id="knob"></div></div>
+ <div id="boost"><div><b><span>🚀</span>Impulsar</b></div></div>
+ <div id="hint">←/→ girar · ↑ bajar · ↓ subir · Espacio impulsar · P pausa</div>
+ <div id="marker"><svg viewBox="0 0 24 24"><path id="arrow" d="M12 2 L21 20 L12 15 L3 20Z" fill="#ffd24a" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg><span id="dist"></span></div>
+ <div id="flash"></div>
+</div>
+
+<div id="title" class="screen show"><div class="card"><h1>空の旅</h1><h2>Miyu · Cielos de Sakura</h2>
+ <p>Planea en parapente sobre la ciudad, cruza los aros dorados y llega al templo antes de que se acabe el tiempo.</p>
+ <button class="btn" id="goBtn">¡Despegar!</button><button class="btn alt" id="misBtn">Misiones</button><button class="btn alt" id="shopBtn">Taller</button></div></div>
+<div id="shop" class="screen"><div class="card"><h2>Taller</h2><p class="sp">Pétalos: 🌸 <b id="shopPetals">0</b></p>
+ <h3>Trajes</h3><div id="outfits"></div><h3>Mejoras de vuelo</h3><div id="upgrades"></div><button class="btn alt" id="shopBack">Volver</button></div></div>
+<div id="missions" class="screen"><div class="card"><h2>Elige tu misión</h2><div id="mlist"></div><button class="btn alt" id="shopBtn2">Taller</button><button class="btn alt" id="backBtn">Volver</button></div></div>
+<div id="pauseScr" class="screen"><div class="card"><h2>Pausa</h2><button class="btn" id="resBtn">Continuar</button><button class="btn alt" id="rstBtn">Reiniciar</button><button class="btn alt" id="menuBtn">Misiones</button></div></div>
+<div id="results" class="screen"><div class="card"><h2 id="resTitle">¡Misión cumplida!</h2><div class="big" id="resStars">★★★</div>
+ <p id="resTxt"></p><button class="btn" id="againBtn">Volar de nuevo</button><button class="btn alt" id="nextBtn">Siguiente</button><button class="btn alt" id="resMenuBtn">Misiones</button></div></div>
+<div id="vn" class="screen"><div class="vnbox"><div class="vnav"><svg><use id="vnUse" href="#miyu"/></svg></div>
+ <div class="vnbody"><div class="vnhead"><b id="vnName">Miyu</b><span id="vnRole"></span></div><p id="vnText"></p>
+ <div class="vnhint">Clic o Enter: continuar · Esc: saltar ▶</div></div></div></div>
+<script type="module" src="/src/main.ts"></script></body></html>

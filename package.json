@@ -1,0 +1,9 @@
+{
+  "name": "vuelo-ciudad",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": { "dev": "vite --port 5174", "build": "vite build" },
+  "dependencies": { "three": "^0.170.0" },
+  "devDependencies": { "vite": "^6.0.0", "typescript": "^5.6.0", "@types/three": "^0.170.0" }
+}
