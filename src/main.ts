@@ -170,7 +170,9 @@ function followCamera(dt: number, snap = false) {
   const want = tmp.set(Math.sin(camYaw) * dist, 2.6 - glider.pitch * 6, Math.cos(camYaw) * dist).add(glider.pos);
   camera.position.lerp(want, snap ? 1 : 1 - Math.exp(-dt * 5));
   glider.forward(fwd);
-  camLook.lerp(tmp.copy(glider.pos).addScaledVector(fwd, 6).add(new THREE.Vector3(0, 1.5, 0)), snap ? 1 : 1 - Math.exp(-dt * 7));
+  // si el próximo aro está más alto, la cámara mira un poco hacia arriba para no perderlo
+  const lift = THREE.MathUtils.clamp((course.target.y - glider.pos.y) * 0.35, -2, 6);
+  camLook.lerp(tmp.copy(glider.pos).addScaledVector(fwd, 6).add(new THREE.Vector3(0, 1.5 + lift, 0)), snap ? 1 : 1 - Math.exp(-dt * 7));
   camera.lookAt(camLook);
   if (glider.boosting) camera.rotateZ(Math.sin(t * 55) * 0.004);       // temblor leve con el impulso
   const fov = 58 + (glider.speed - 16) * 0.35 + (glider.boosting ? 4 : 0);

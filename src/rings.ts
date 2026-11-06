@@ -2,13 +2,31 @@ import * as THREE from 'three';
 import { starTexture } from './theme';
 import type { Mission } from './missions';
 
+// Halo en forma de anillo que siempre mira a la cámara: así el aro se ve también de frente,
+// cuando el toro (perpendicular a la ruta) quedaría de canto.
+let ringGlowTex: THREE.CanvasTexture | undefined;
+function ringGlow() {
+  if (!ringGlowTex) {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d')!;
+    const gr = g.createRadialGradient(64, 64, 26, 64, 64, 64);
+    gr.addColorStop(0, 'rgba(255,220,120,0)'); gr.addColorStop(.45, 'rgba(255,236,150,.9)');
+    gr.addColorStop(.55, 'rgba(255,236,150,.9)'); gr.addColorStop(1, 'rgba(255,220,120,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    ringGlowTex = new THREE.CanvasTexture(c);
+  }
+  return ringGlowTex;
+}
+
 class Ring {
   group = new THREE.Group();
   c: THREE.Vector3; n = new THREE.Vector3();
-  torus: THREE.Mesh; halo: THREE.Mesh; sparks: THREE.Sprite[] = [];
+  torus: THREE.Mesh; halo: THREE.Mesh; glow: THREE.Sprite; sparks: THREE.Sprite[] = [];
   burst = 0;
   constructor(scene: THREE.Scene, c: THREE.Vector3, dir: THREE.Vector3, public r: number) {
     this.c = c.clone(); this.n.copy(dir).normalize();
+    this.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: ringGlow(), color: '#ffd24a', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    this.glow.scale.setScalar(r * 2.6); this.group.add(this.glow);
     this.torus = new THREE.Mesh(new THREE.TorusGeometry(r, .55 * Math.max(.7, r / 7.5), 12, 56), new THREE.MeshBasicMaterial({ color: '#ffd24a', transparent: true, fog: false }));
     this.halo = new THREE.Mesh(new THREE.TorusGeometry(r, 1.5 * Math.max(.7, r / 7.5), 10, 56), new THREE.MeshBasicMaterial({ color: '#ffe48a', transparent: true, opacity: .25, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     this.group.add(this.torus, this.halo);
@@ -68,6 +86,7 @@ export class Course {
       if (i < this.next) {
         if (r.burst > 0) {
           r.burst -= dt; r.group.scale.addScalar(dt * 3); tm.opacity = Math.max(0, r.burst / .6); hm.opacity = tm.opacity * .25;
+          (r.glow.material as THREE.SpriteMaterial).opacity = tm.opacity * .8;
           if (r.burst <= 0) r.group.visible = false;
         }
         return;
@@ -76,6 +95,7 @@ export class Course {
       r.group.scale.setScalar(isNext ? 1 + Math.sin(this.t * 4) * .04 : .72);
       tm.opacity = isNext ? 1 : Math.max(.22, .6 - .14 * (k - 1));
       hm.opacity = isNext ? .3 + Math.sin(this.t * 4) * .1 : .1;
+      (r.glow.material as THREE.SpriteMaterial).opacity = isNext ? .95 : Math.max(.35, .6 - .1 * (k - 1));
       r.sparks.forEach((s) => {
         const a = s.userData.a + this.t * (isNext ? .8 : .3);
         s.position.set(Math.cos(a) * r.r, Math.sin(a) * r.r, 0);
